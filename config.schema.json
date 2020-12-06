@@ -343,6 +343,12 @@
 									"enum": [
 										"speaker"
 									]
+								},
+								{
+									"title": "smart speaker (bad support in Home app, but automations can set volume)",
+									"enum": [
+										"smartspeaker"
+									]
 								}
 							]
 						},

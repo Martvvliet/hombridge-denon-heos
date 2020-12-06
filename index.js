@@ -394,8 +394,8 @@ class receiver {
 						this.volumeCtrlDuplicates[this.volumeControl[i].name] = true;
 						this.volumeAccessories.push(new volumeClient(this, this.volumeControl[i]));
 					}
-				} catch {
-					g_log.error("ERROR: Could not add Volume control accessory.");
+				} catch (err) {
+					g_log.error("ERROR: Could not add Volume control accessory.", err);
 				}
 			}
 		}
@@ -1921,6 +1921,7 @@ class volumeClient {
 					.on('get', this.getVolume.bind(this))
 					.on('set', this.setVolume.bind(this));
 			} else if (this.controlType === 'speaker') {
+				this.accessory.category = this.api.hap.Categories.SPEAKER;
 				this.volumeService = new Service.Speaker(this.name, 'volumeInput');
 				this.volumeService
 					.getCharacteristic(Characteristic.Mute)
@@ -1931,23 +1932,24 @@ class volumeClient {
 					.on('get', this.getVolume.bind(this))
 					.on('set', this.setVolume.bind(this));
 			} else if (this.controlType === 'smartspeaker') {
-				// this.volumeService = new Service.SmartSpeaker(this.name, 'volumeInput');
-				// this.volumeService
-				// 	.getCharacteristic(Characteristic.CurrentMediaState)
-				// 	.on('get', this.getMedia.bind(this))
-				// 	.on('set', this.setMedia.bind(this));
-				// this.volumeService
-				// 	.getCharacteristic(Characteristic.TargetMediaState)
-				// 	.on('get', this.getMedia.bind(this))
-				// 	.on('set', this.setMedia.bind(this));
-				// this.volumeService
-				// 	.getCharacteristic(Characteristic.Mute)
-				// 	.on('get', this.getMuteState.bind(this))
-				// 	.on('set', this.setMuteState.bind(this));
-				// this.volumeService
-				// 	.getCharacteristic(Characteristic.Volume)
-				// 	.on('get', this.getVolume.bind(this))
-				// 	.on('set', this.setVolume.bind(this));
+				this.accessory.category = this.api.hap.Categories.SPEAKER;
+				this.volumeService = new Service.SmartSpeaker(this.name, 'volumeInput');
+				this.volumeService
+					.setCharacteristic(Characteristic.ConfiguredName, this.name);
+				this.volumeService
+					.getCharacteristic(Characteristic.CurrentMediaState)
+					.on('set', this.setMedia.bind(this));
+				this.volumeService
+					.getCharacteristic(Characteristic.TargetMediaState)
+					.on('set', this.setMedia.bind(this));
+				this.volumeService
+					.getCharacteristic(Characteristic.Volume)
+					.on('get', this.getVolume.bind(this))
+					.on('set', this.setVolume.bind(this));
+				this.volumeService
+					.setCharacteristic(Characteristic.CurrentMediaState, Characteristic.CurrentMediaState.STOP);
+				this.volumeService
+					.setCharacteristic(Characteristic.TargetMediaState, Characteristic.CurrentMediaState.STOP);
 			}
 
 
@@ -2001,28 +2003,27 @@ class volumeClient {
 					.on('get', this.getVolume.bind(this))
 					.on('set', this.setVolume.bind(this));
 			} else if (this.controlType === 'smartspeaker') {
-				// this.volumeService
-				// 	.getService(Service.SmartSpeaker)
-				// 	.getCharacteristic(Characteristic.CurrentMediaState)
-				// 	.on('get', this.getMedia.bind(this))
-				// 	.on('set', this.setMedia.bind(this));
-				// this.volumeService
-				// 	.getService(Service.SmartSpeaker)
-				// 	.getCharacteristic(Characteristic.TargetMediaState)
-				// 	.on('get', this.getMedia.bind(this))
-				// 	.on('set', this.setMedia.bind(this));
-				// this.accessory
-				// 	.getService(Service.SmartSpeaker)
-				// 	.getCharacteristic(Characteristic.Mute)
-				// 	.on('get', this.getMuteState.bind(this))
-				// 	.on('set', this.setMuteState.bind(this));
-				// this.accessory
-				// 	.getService(Service.SmartSpeaker)
-				// 	.getCharacteristic(Characteristic.Volume)
-				// 	.on('get', this.getVolume.bind(this))
-				// 	.on('set', this.setVolume.bind(this));
+				this.accessory
+					.getService(Service.SmartSpeaker)
+					.getCharacteristic(Characteristic.CurrentMediaState)
+					.on('set', this.setMedia.bind(this));
+				this.accessory
+					.getService(Service.SmartSpeaker)
+					.getCharacteristic(Characteristic.TargetMediaState)
+					.on('set', this.setMedia.bind(this));
+				this.accessory
+					.getService(Service.SmartSpeaker)
+					.getCharacteristic(Characteristic.Volume)
+					.on('get', this.getVolume.bind(this))
+					.on('set', this.setVolume.bind(this));
+				this.accessory
+					.getService(Service.SmartSpeaker)
+					.updateCharacteristic(Characteristic.CurrentMediaState, Characteristic.CurrentMediaState.STOP);
+				this.accessory
+					.getService(Service.SmartSpeaker)
+					.updateCharacteristic(Characteristic.TargetMediaState, Characteristic.CurrentMediaState.STOP);
 			}
-			// this.api.updatePlatformAccessories([this.accessory]);
+			 this.api.updatePlatformAccessories([this.accessory]);
 		}
 	}
 
@@ -2072,36 +2073,19 @@ class volumeClient {
 			if (stateInfo.masterVol) {
 				this.accessory
 					.getService(Service.Speaker)
-					.getCharacteristic(Characteristic.Volume)
-					.updateValue(this.recv.volumeLevel[this.iterator]);
+					.updateCharacteristic(Characteristic.Volume, this.recv.volumeLevel[this.iterator]);
 			}
 			if ((stateInfo.mute === true || stateInfo.mute === false) && this.recv.poweredOn[this.iterator]) {
 				this.accessory
 					.getService(Service.Speaker)
-					.getCharacteristic(Characteristic.Mute)
-					.updateValue(this.recv.muteState[this.iterator]);
+					.updateCharacteristic(Characteristic.Mute, this.recv.muteState[this.iterator]);
 			} 
 		} else if (this.controlType === 'smartspeaker') {
-			// this.volumeService
-			// 	.getService(Service.SmartSpeaker)
-			// 	.getCharacteristic(Characteristic.CurrentMediaState)
-			// 	.updateValue(0);
-			// this.volumeService
-			// 	.getService(Service.SmartSpeaker)
-			// 	.getCharacteristic(Characteristic.TargetMediaState)
-			// 	.updateValue(0);
-			// if (stateInfo.masterVol) {
-			// 	this.accessory
-			// 		.getService(Service.SmartSpeaker)
-			// 		.getCharacteristic(Characteristic.Volume)
-			// 		.updateValue(this.recv.volumeLevel[this.iterator]);
-			// }
-			// if ((stateInfo.mute === true || stateInfo.mute === false) && this.recv.poweredOn[this.iterator]) {
-			// 	this.accessory
-			// 		.getService(Service.SmartSpeaker)
-			// 		.getCharacteristic(Characteristic.Mute)
-			// 		.updateValue(this.recv.muteState[this.iterator]);
-			// } 
+			if (stateInfo.masterVol) {
+				this.accessory
+					.getService(Service.SmartSpeaker)
+					.updateCharacteristic(Characteristic.Volume, this.recv.volumeLevel[this.iterator]);
+			}
 		}
 	}
 
@@ -2171,12 +2155,13 @@ class volumeClient {
 			callback();
 		}
 	}
-	getMedia(callback) {
-		callback(null, 0);
-	}
 
 	setMedia(state, callback) {
-		callback();
+		this.volumeService
+		  .updateCharacteristic(Characteristic.TargetMediaState, state);
+		this.volumeService
+		  .updateCharacteristic(Characteristic.CurrentMediaState, state);
+		callback(null);
 	}
 
 	getVolume(callback) {
